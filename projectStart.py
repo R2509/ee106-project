@@ -1,19 +1,4 @@
-'''
-AUTHOR(S):
-    james Robertson
-    rison padayachy
-
-THIS A TEST UPLOAD TO TEST THAT I CAN COMMIT NEW FILES/CODE
-
-
-
-
-
-
-
-
- /home/james/anaconda3/envs/python312
-
+'''k
 '''
 import pandas as pd;
 

@@ -1,5 +1,6 @@
 '''
 PARRALELL PROCESSIN' ENGINE
+what the actual fuck is this meant to do 
 
 
 '''
@@ -8,6 +9,8 @@ from time import sleep
 import multiprocessing as mp
 from pathlib import Path
 import pandas as pd
+import numpy as numpy
+
 
 
 

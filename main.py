@@ -12,7 +12,7 @@ dir_path = Path(__file__).parent.resolve()
 
 class Placer:
     '''
-    take wrguments for .place() upon
+    take arguments for .place() upon
     instantiation so that they don't
     need to be passed to .place() later.
     '''
@@ -68,3 +68,4 @@ root.title("parallel processing engine")
 button = create_button()
 button.place()
 root.mainloop()
+

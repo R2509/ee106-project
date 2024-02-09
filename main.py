@@ -4,11 +4,48 @@ Main file.
 
 from pathlib import Path
 from re import X
-import tkinter as tk
-#from tkinter import ttk
-#ttk.Button(win, text= "someShit", command=_AFunctionOrSmthn).pack()
+import pandas as pd
+
 
 dir_path = Path(__file__).parent.resolve()
+class MT_operations:
+    # a class containing all functions for doing multithreaded operations on columns. 
+    # columns(arr) is said colums to do operations on
+    #lines(tuple 2 vars) is the start line and end line
+
+
+    def __init__(self, dataframe: pd.DataFrame, cols, lines):
+
+    def getMax
+    def getMin
+    def Get
+
+
+    def calc_mean(self):
+
+    def get_max(self)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class Placer:
     '''

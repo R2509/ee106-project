@@ -6,7 +6,7 @@ import multiprocessing as mp
 from pathlib import Path
 import pandas as pd
 import tkinter as tk
-import numpy as numpy
+import numpy as np
 from time import sleep
 
 

@@ -2,8 +2,12 @@
 PARRALLEL PROCESSING ENGINE
 '''
 
+import os
 from pathlib import Path
+import sys
+from typing import Callable
 import pandas as pd
+import multiprocessing as mp
 from dataclasses import dataclass
 dir_path = Path(__file__).parent.resolve()
 
@@ -28,6 +32,22 @@ class CSV:
         column_name = self.dataframe.columns[column_index]
         column_data = self.dataframe[column_name]
         return column_data
+    def _process_column(self, column_index: int):
+        column = self._select_column(column_index)
+        return column.describe()
+    def process_columns(self):
+        pass
+
+class MP:
+    def __init__(self):
+        self.cores: int
+        self._get_num_cores()
+    def _get_num_cores(self):
+        self.cores = mp.cpu_count()
+    def start_process(self, proc: Callable, *args):
+        self._run_process(proc, args)
+    def _run_process(self, proc: Callable, args: tuple):
+        proc(*args)
 
 def open_csv():
     dataframe = pd.read_csv(dir_path / "sensor_timeseries.csv")

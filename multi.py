@@ -4,6 +4,7 @@ Definition of MultiCoreManager class.
 
 from multiprocessing import JoinableQueue, Process, cpu_count
 from typing import Any, Callable
+from time import sleep
 
 
 class MultiCoreManager:
@@ -11,10 +12,25 @@ class MultiCoreManager:
     Manages running processes across multiple cores.
     '''
     def __init__(self):
-        # Declare instance variables
+        # Declare instance variables. It has been layed out in this
+        # way to increase readability. Initial values are assigned in
+        # `self._load()`
+
+        # The number of cores that the device has.
         self.core_count: int
+
+        # The number of cores currently in use. This is used when
+        # queueing processes.
         self.cores_in_use: int
+
+        # The number of processes that have been completed
+        self.process_index: int
+
+        # Contains wrapped processes. Raw functions are not needed.
         self.process_queue: list[Callable[..., Any]]
+
+        # An object which allows communication between
+        # processes and the main thread.
         self.queue: JoinableQueue
 
         # Initialise data
@@ -23,6 +39,7 @@ class MultiCoreManager:
     def _load(self):
         self.core_count = cpu_count()
         self.cores_in_use = 0
+        self.process_index = 0
         self.process_queue = []
         self.queue = JoinableQueue()
 
@@ -55,17 +72,48 @@ class MultiCoreManager:
             args = (self.queue, ),
         )
         return process
-    def _start_process(self, process_index: int):
-        self.process_queue[process_index]
+    def _start_next_process(self):
+        process = self._create_process(self.process_index)
+        process.start()
+        self.process_index += 1
+
     def _wait_until_done(self):
         self.queue.join()
     def start_processes(self):
         '''
         Start running all the processes.
         '''
-        proc_queue_index = 0
-        while self.cores_in_use < self.core_count \
-        and proc_queue_index < len(self.process_queue):
-            process = self._create_process(proc_queue_index)
-            process.start()
-            proc_queue_index += 1
+        # Reset counter
+        self.process_index = 0
+
+        # Use polling to check when cores are available.
+        # Loop while there are still processes to be added.
+        while self.process_index < len(self.process_queue):
+            # If we have any cores available
+            # (that aren't already running tasks)
+            if self.cores_in_use < self.core_count:
+                # Start up the next process.
+                self._start_next_process()
+            else:
+                # Poll every 0.1 seconds.
+                sleep(0.1)
+
+        # Wait until all processes have finished executing.
+        self._wait_until_done()
+
+        # debug
+        data = self.queue.get()
+        print(data)
+
+def add_two(a: int, b: int):
+    '''
+    Test function that adds two numbers.
+    '''
+    return a + b
+
+if __name__ == '__main__':
+    mcm = MultiCoreManager()
+    mcm.add_to_queue(add_two)
+    mcm.start_processes()
+
+# AttributeError: Can't pickle local object 'MultiCoreManager._wrap_func.<locals>.proc'

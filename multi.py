@@ -60,6 +60,9 @@ class MultiCoreManager:
             func_result = func()
             queue.put(func_result)
 
+            # Tell the queue that we are finished
+            queue.task_done()
+
             # Core is now freed
             self.cores_in_use -= 1
         return proc

@@ -3,7 +3,7 @@
 # in the csv only 52 sensors - 8 
 from time import pthread_getcpuclockid
 import pandas as pd
-full_data_frame = (pd.read_csv("sensor_timeseries.csv"))
+full_data_frame = pd.read_csv("sensor_timeseries.csv")
 data_frame_only_sensor_data = full_data_frame.iloc[:, 2:-1]
 #print(data_frame_only_sensor_data)
 #print(full_data_frame)

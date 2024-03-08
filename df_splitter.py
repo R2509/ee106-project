@@ -8,9 +8,11 @@ data_frame_only_sensor_data = full_data_frame.iloc[:, 2:-1]
 #print(data_frame_only_sensor_data)
 #print(full_data_frame)
 
+
+
 #print(len(data_frame_only_sensor_data.columns))
 def dataSplitter(dfin):
-    num_cols = len(data_frame_only_sensor_data.columns)
+    num_cols = len(dfin.columns)
     # create 8 tasks
     num_cols_first_proc = (num_cols//8) # gets how many columns should be handled for the first 7 of 8 processes
     # optimise efficiency with relativley even work distribution

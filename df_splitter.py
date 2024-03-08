@@ -2,16 +2,26 @@
 
 # in the csv only 52 sensors - 8 
 from time import pthread_getcpuclockid
-import pandas as pd
+import pandas as pd 
+
+
+
+
+## below not reqd in this file!
 full_data_frame = pd.read_csv("sensor_timeseries.csv")
+print(full_data_frame.nunique())
+'''
 data_frame_only_sensor_data = full_data_frame.iloc[:, 2:-1]
 #print(data_frame_only_sensor_data)
 #print(full_data_frame)
-
-
-
+'''
+def range_selector(start_time, end_time, accept_error):
+    pass
+def time_selector(time):
+    pass
+'''
 #print(len(data_frame_only_sensor_data.columns))
-def dataSplitter(dfin):
+def data_splitter(dfin):
     num_cols = len(dfin.columns)
     # create 8 tasks
     num_cols_first_proc = (num_cols//8) # gets how many columns should be handled for the first 7 of 8 processes
@@ -33,4 +43,5 @@ def dataSplitter(dfin):
 
     print(df8)
     return df1, df2, df3, df4, df5, df5, df6, df7, df8, df9
-dataSplitter(data_frame_only_sensor_data)
+data_splitter(data_frame_only_sensor_data)
+'''

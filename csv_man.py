@@ -33,7 +33,7 @@ class CSVManager:
         self.df: DataFrame
         self._load_data(file_path)
 
-    def _ensure_numeric(self, series: Series) -> None:
+    def _ensure_numeric(self, series: Series | DataFrame) -> None:
         '''
         Verifies that the passed `Series` object, `series`, contains only
         numeric data.
@@ -63,15 +63,17 @@ class CSVManager:
 
         # Assign value to instance variable
         self.df = dataframe
-    def _get_column_by_name(self, column_name: str) -> Series:
+    def _select_column(self, column_index: int) -> Series:
         '''
-        Retrieve data from the DataFrame column named `column_name`.
+        Retrieve data from the DataFrame column named `column_index`.
 
         Parameters:
-        - `column_name`: The name of the column to retrieve data from.
+        - `column_index`: The index of the column to retrieve data from.
         '''
-        return self.df.loc[:, column_name]
-    def describe_column(self, column_name: str) -> Series:
+        return self.df.iloc[:, column_index]
+    def select_column_range(self, column_start: int, column_end: int) -> list[Series]:
+        return [self.df.iloc[:, col] for col in range(column_start, column_end)]
+    def describe_column(self, column_index: int) -> Series:
         '''
         ## CSVManager.describe_column
 
@@ -83,6 +85,6 @@ class CSVManager:
         Parameters:
         - `column_name`: The name of the column to retrieve data from.
         '''
-        column = self._get_column_by_name(column_name)
+        column = self._select_column(column_index)
         self._ensure_numeric(column)
         return column.describe()

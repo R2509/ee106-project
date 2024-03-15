@@ -27,7 +27,7 @@ class Command:
             arg_parser.add_argument(arg)
         self.arg_parser = arg_parser
 
-    def __call__(self, params: str):
+    def __call__(self, params: list[str]):
         args = self.arg_parser.parse_args(params)
         self.func(args)
 
@@ -64,7 +64,7 @@ class SimpleCLI:
         command_name, *command_args = command_text.split(' ')
         command = self.command_list.get_command(command_name)
         if command is not None:
-            command(''.join(command_args))
+            command(command_args)
         else:
             print(f'No command named: "{command_name}".')
 

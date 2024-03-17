@@ -131,12 +131,14 @@ def subset_df(
     columns = [df[colname].to_numpy() for colname in cells.columns]
     return columns
 
-def get_executor_class(method: str) -> type[ThreadPoolExecutor | ProcessPoolExecutor]:
+def get_executor_class(method: str) -> type[ThreadPoolExecutor | ProcessPoolExecutor] | None:
     match method:
         case 'thread':
             executor_class = ThreadPoolExecutor
         case 'process':
             executor_class = ProcessPoolExecutor
+        case 'sync':
+            executor_class = None
         case _:
             raise ValueError(
                 '`method` argument must be'

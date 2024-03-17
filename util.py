@@ -14,6 +14,12 @@ TIME_MAX = datetime(2018, 8, 31)
 SENSOR_INDEX_MIN = 0
 SENSOR_INDEX_MAX = 51
 
+# Text formatting escape codes
+CLEAR_LINE = '\x1b[2K\x1b[G'
+CLEAR_SCREEN = '\x1b[2J\x1b[H'
+TEXT_RESET = '\x1b[m'
+TEXT_GREY = '\x1b[38;5;245m'
+
 
 def sensor_name(index: int):
     '''Generates a sensor name from an index.'''
@@ -87,6 +93,9 @@ class Logger:
                 return result
             return inner
         return wrapper
+
+    def clear_terminal(self):
+        self.log(CLEAR_SCREEN)
 
 
 def subset_df(

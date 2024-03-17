@@ -8,7 +8,7 @@ from argparse import ArgumentParser, Namespace
 import traceback
 from typing import Any, Callable
 
-from util import logger
+from util import TEXT_GREY, TEXT_RESET, logger
 
 
 class _Command:
@@ -81,6 +81,8 @@ class _CommandList:
             return None
         return c[0]
 
+    def list_commands(self):
+        return [command.name for command in self.commands]
 
 class SimpleCLI:
     '''
@@ -98,6 +100,12 @@ class SimpleCLI:
     def _add_default_commands(self):
         def cmd_exit(ns: Namespace):
             sys.exit(ns.code)
+        def cmd_clear(ns: Namespace):
+            logger.clear_terminal()
+
+        def cmd_help(ns: Namespace):
+            cmdlist_str = ' '.join(self.command_list.list_commands())
+            return f'Available commands:\n\t{TEXT_GREY}{cmdlist_str}{TEXT_RESET}'
 
         self.add_command('exit', cmd_exit, 'Exit the CLI.', [
             (['-c', '--code'], {
@@ -106,10 +114,14 @@ class SimpleCLI:
                 'type': int,
             }),
         ])
+        
+        self.add_command('clear', cmd_clear, 'Clear the terminal.', [])
+        self.add_command('help', cmd_help, 'List available commands.', [])
 
     def _split_command_text(self, command_text: str):
         '''
-        Ensures that all double-quoted string arguments are kept intact.
+        Ensures that all double-quoted string arguments in the input text are
+        kept intact.
         '''
         initial_split = command_text.split()
 
@@ -150,8 +162,16 @@ class SimpleCLI:
             logger.log(f'No command named: "{command_name}".\n\r')
     def _run_cli(self):
         while True:
-            line = input('Test: >> ')
-            self.run_command(line)
+            # Get a line of input.
+            line = input('Python: > ')
+            # Split by any semicolons (in case the
+            # user wants to run multiple commands).
+            commands = line.split(';')
+            # Run each command in turn.
+            for command in commands:
+                # Dont't try to run empty command strings!
+                if len(command) > 0:
+                    self.run_command(command)
 
     def start(self):
         try:

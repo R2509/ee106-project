@@ -9,6 +9,7 @@ from time import perf_counter
 from pandas import DataFrame, Series, read_csv
 
 from util import (
+    CLEAR_LINE,
     logger,
 
     get_executor_class,
@@ -126,7 +127,6 @@ def benchmark(
     start_time = perf_counter()
     internal_times: list[float] = []
 
-    CLEAR_LINE = '\x1b[2K\x1b[G'
     for index in range(times):
         logger.log(f'{CLEAR_LINE}Benchmarking analysis program... (run {index + 1} of {times})')
         _, time_taken = generate_descriptions(data_subset, method)

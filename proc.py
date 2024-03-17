@@ -1,131 +1,90 @@
-from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
-import concurrent.futures
+from datetime import datetime
 from pathlib import Path
-from typing import Literal
-import pandas as pd
+from time import perf_counter
 
-from constants import (
-    SENSOR_INDEX_MAX,
-    SENSOR_INDEX_MIN,
-    TIME_MAX,
+from pandas import DataFrame, Series, read_csv
+
+from util import (
+    logger,
+
+    get_executor_class,
+
     TIME_MIN,
+    TIME_MAX,
+    SENSOR_INDEX_MIN,
+    SENSOR_INDEX_MAX,
+    subset_df,
 )
 
-from logger import logger
 
-
-def sensor_text(index: int):
-    '''Generates a sensor name from an index.'''
-    return f"sensor_{str(index).rjust(2, '0')}"
-
-def subset_df(
-        df: pd.DataFrame,
-        time_start: str = TIME_MIN,
-        time_end: str = TIME_MAX,
-        sensor_start: int = SENSOR_INDEX_MIN,
-        sensor_end: int = SENSOR_INDEX_MAX,
-        ):
-    '''
-    Select a subset of rows and columns in
-    the dataframe. Based on a time range
-    and a sensor range.
-    '''
-
-    # Change indexing column from default
-    # (numeric index from CSV file) to
-    # 'timestamp' column as we want to
-    # index with time. (Solution found on StackOverflow)
-    df.reset_index(inplace=True)
-    df.set_index('timestamp', inplace=True)
-
-    # Gather the requested cells into a nother DataFrame.
-    check_param_excl = [
-        time_start == TIME_MIN,
-        time_end == TIME_MAX,
-        sensor_start == SENSOR_INDEX_MIN,
-        sensor_end == SENSOR_INDEX_MAX,
-    ]
-    if all(check_param_excl):
-        cells = df
-    else:
-        # Integrate input validation
-        cells = df.loc[
-            time_start:time_end,
-            sensor_text(sensor_start):sensor_text(sensor_end)
-        ]
-
-    # Convert DataFrame to a list of lists
-    # Makes the data pickle-proof. It can
-    # be parsed back into a Series or
-    # DataFrame later when needed.
-    return cells.values.tolist() #            <--| From supervisor
- 
-def data_summary(data: list | list[list]):
+def subprocess_task(data: list | list[list]):
     '''
     Provide a data summary of the `Series` or `DataFrame` data provided.
     contains code suggested by supervisor.
     '''
 
-    print('New process spawned...', flush=True)
     # Convert list, or list of lists, into
     # a Series or DataFrame respectively.
     if type(data[0]) == list:
         # If the list data is 2d (i.e. has nested
         # lists) it must represent a DataFrame.
-        describable = pd.DataFrame(data)
+        describable = DataFrame(data)
     else:
         # The only other possible option is for
         # the data to represent a Series.
-        describable = pd.Series(data)
+        describable = Series(data)
 
     # Get Pandas to provide a summary on the
     # Series or DataFrame.
     desc = describable.describe()
 
-    print('Process done.', flush=True)
     return desc
 
-def map_data(data: list[list], method: int):
+def generate_descriptions(column_data: list[list], method: str):
     '''
     Maps tasks over the passed `DataFrame`
     data, using the method specified.
     '''
-    executor_class: type[Executor] = [
-        ThreadPoolExecutor, #  | Method 0
-        ProcessPoolExecutor, # | Method 1
-    ][method]
+    executor_class = get_executor_class(method)
+
     with executor_class() as executor:
-        # Send individual columns, as well as
-        # entire DataFrame subset.
-        data_for_processes = [*data, data]
-        descriptions = list(executor.map(data_summary, data_for_processes))
+        # Record start time.
+        start_time = perf_counter()
+
+        # Send individual columns to subprocesses.
+        descriptions = list(executor.map(subprocess_task, column_data))
+
+        # **Wait for tasks** and shut down. From StackOverflow.
         executor.shutdown(wait=True)
-    return descriptions
+
+        # Record execution duration.
+        duration = perf_counter() - start_time
+
+    return descriptions, duration
+
 
 def summarise_file(
         file_path: str | Path,
-        time_range: tuple[str, str] = (TIME_MIN, TIME_MAX),
+        time_range: tuple[datetime, datetime] = (TIME_MIN, TIME_MAX),
         sensor_range: tuple[int, int] = (SENSOR_INDEX_MIN, SENSOR_INDEX_MAX),
-        method: int = 0,
+        method: str = 'process',
     ):
     '''
     Provide a data summary of the specified
     file, within the specified time and sensor
     range.
     '''
-    df = logger.log_task(
-        pd.read_csv,
-        'Reading CSV data into DataFrame',
-    )(file_path)
 
-    data_subset = logger.log_task(
-        subset_df,
-        'Gathering DataFrame subset',
-    )(df, *time_range, *sensor_range)
+    # Read the CSV file and store the contents in a Pandas DataFrame.
+    df = logger.log_task('Reading CSV file data into DataFrame... ')\
+        (read_csv)(file_path)
 
-    mapped = logger.log_task(
-        map_data,
-        'Mapping tasks to processes',
-    )(data_subset, method)
+    # Create a subset of the dataset based on inputs.
+    data_subset = logger.log_task('Creating DataFrame subset for analysis... ')\
+        (subset_df)(df, *time_range, *sensor_range)
 
-    return mapped
+    # Get a summary of all the data.
+    results = logger.log_task('Mapping analysis tasks to processes... ')\
+        (generate_descriptions)(data_subset, method)
+
+    return results

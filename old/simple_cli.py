@@ -1,17 +1,19 @@
 '''
-Allows the creation and usage of a basic Command-Line Interface.
+simple_cli.py
+
+Contains functionality which facilitates command line functionality. Written wholly by Rich Padayachy
 '''
 
-import sys
-
 from argparse import ArgumentParser, Namespace
-import traceback
+import sys
 from typing import Any, Callable
 
-from util import logger
+from finalised.util import logger
 
 
-class _Command:
+
+
+class Command:
     def __init__(
             self,
             name: str,
@@ -43,9 +45,9 @@ class _Command:
 
 
 
-class _CommandList:
+class CommandList:
     def __init__(self) -> None:
-        self.commands: list[_Command] = []
+        self.commands: list[Command] = []
 
     def add_command(
             self,
@@ -54,32 +56,19 @@ class _CommandList:
             cmd_desc: str,
             params: list[tuple[list[str], dict[str, Any]]],
         ):
-        '''
-        Add a command to the CLI.
-        '''
-        command = _Command(cmd_name, cmd_func, cmd_desc, params)
+        command = Command(cmd_name, cmd_func, cmd_desc, params)
         self.commands.append(command)
-    def add_commands(
-            self,
-            *cmds: tuple[
-                str,
-                Callable[[Namespace], str | int | None],
-                str,
-                list[tuple[list[str], dict[str, Any]]],
-            ],
-        ):
-        '''
-        Add multiple commands to the CLI. Commands are passed as in
-        `SimpleCLI.add_command()`, with each command being a tuple.
-        '''
-        for cmd in cmds:
-            self.add_command(*cmd)
 
     def get_command(self, name: str):
-        c = list(filter(lambda x: x.name == name, self.commands))
-        if len(c) == 0:
+        filtered_cmd_list = list(filter(lambda x: x.name == name, self.commands))
+        if len(filtered_cmd_list) == 0:
             return None
-        return c[0]
+        assert len(filtered_cmd_list) == 1,\
+            'More than one command was found with the same name.'
+        return filtered_cmd_list[0]
+
+    def list_commands(self):
+        return [command.name for command in self.commands]
 
 
 class SimpleCLI:
@@ -88,9 +77,8 @@ class SimpleCLI:
     commands can be added.
     '''
     def __init__(self, include_default_commands: bool = True):
-        self.command_list = _CommandList()
+        self.command_list = CommandList()
         self.add_command = self.command_list.add_command
-        self.add_commands = self.command_list.add_commands
 
         if include_default_commands:
             self._add_default_commands()
@@ -100,43 +88,15 @@ class SimpleCLI:
             sys.exit(ns.code)
 
         self.add_command('exit', cmd_exit, 'Exit the CLI.', [
-            (['-c', '--code'], {
+            (['code'], {
                 'action': 'store',
-                'default': '0',
                 'type': int,
+                'default': 0,
             }),
         ])
 
-    def _split_command_text(self, command_text: str):
-        '''
-        Ensures that all double-quoted string arguments are kept intact.
-        '''
-        initial_split = command_text.split()
-
-        out = []
-        acc = ''
-        for item in initial_split:
-            append = False
-
-            if not '"' in item:
-                append = True
-            if len(acc) > 0 and '"' in item:
-                append = True
-            if item[0] == '"' and len(item) > 1 and item[-1] == '"':
-                append = True
-
-            if len(acc) > 0:
-                acc += f' {item}'
-            else:
-                acc = item
-            if append:
-                out.append(acc.strip('"'))
-                acc = ''
-
-        return out
-
     def run_command(self, command_text: str):
-        command_name, *command_args = self._split_command_text(command_text)
+        command_name, *command_args = command_text.split(' ')
 
         if command_name == '':
             return
@@ -145,17 +105,17 @@ class SimpleCLI:
 
         if command is not None:
             output = command(command_args)
-            logger.log(f'{output}\n')
+            logger.log(output)
         else:
-            logger.log(f'No command named: "{command_name}".\n\r')
+            logger.log(f'No command named: "{command_name}".')
     def _run_cli(self):
         while True:
-            line = input('Test: >> ')
+            line = input('Project: >> ')
             self.run_command(line)
 
     def start(self):
         try:
             self._run_cli()
         except KeyboardInterrupt:
-            print('^C detected, exiting gracefully...')
+            print('^C detected. Exiting gracefully...')
             sys.exit(0)

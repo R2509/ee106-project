@@ -8,9 +8,9 @@ from time import perf_counter
 
 from pandas import DataFrame, Series, read_csv
 
+from logger import logger
 from util import (
     CLEAR_LINE,
-    logger,
 
     get_executor_class,
 
@@ -18,6 +18,9 @@ from util import (
     TIME_MAX,
     SENSOR_INDEX_MIN,
     SENSOR_INDEX_MAX,
+    COLUMN_WIDTH,
+    get_summaries_per_df,
+    sensor_name,
     subset_df,
 )
 
@@ -72,12 +75,47 @@ def generate_descriptions(columns: list[list], method: str):
 
     return descriptions, duration
 
+def collate_results(
+        results: list[Series],
+        sensor_start: int,
+        sensor_end: int,
+        entries_per_df: int,
+    ):
+    '''
+    Generate a `DataFrame` containing descriptions of all selected columns.
+    '''
+
+    # generate a list of sensor names. Will be used as
+    # column headings in the DataFrame.
+    # TODO: document this stuff better...
+    sensor_range = [
+        sensor_name(index).rjust(COLUMN_WIDTH - 2, chr(160))
+        for index in range(sensor_start, sensor_end + 1)
+    ]
+
+    # Generate entries which a dict can be constructed
+    # from. Will provide data for DataFrame.
+    dict_entries = [
+        (sensor_range[index], results[index])
+        for index in range(len(results))
+    ]
+
+    # Create a DataFrame using a dict generated from the entried above.
+    dataframes = [
+        DataFrame({ k: v for k, v in dict_entries[entry_group_start:entry_group_start + entries_per_df]})
+        for entry_group_start in range(0, len(results), entries_per_df)
+    ]
+
+    # Return the DataFrame.
+    return dataframes
+
 
 def summarise_file(
         file_path: str | Path,
-        time_range: tuple[datetime, datetime] = (TIME_MIN, TIME_MAX),
+        time_range: tuple[str, str] = (TIME_MIN, TIME_MAX),
         sensor_range: tuple[int, int] = (SENSOR_INDEX_MIN, SENSOR_INDEX_MAX),
         method: str = 'process',
+        entries_per_df: int = get_summaries_per_df()
     ):
     '''
     Provide a data summary of the specified
@@ -94,14 +132,18 @@ def summarise_file(
         (subset_df)(df, *time_range, *sensor_range)
 
     # Get a summary of all the data.
-    results = logger.log_task('Mapping analysis tasks to processes... ')\
+    series_data, time_taken = logger.log_task('Running analysis tasks... ')\
         (generate_descriptions)(data_subset, method)
+    
+    # Collate all results
+    results = logger.log_task('Collating results... ')\
+        (collate_results)(series_data, *sensor_range, entries_per_df)
 
-    return results
+    return results, time_taken
 
 def benchmark(
         file_path: str | Path,
-        time_range: tuple[datetime, datetime] = (TIME_MIN, TIME_MAX),
+        time_range: tuple[str, str] = (TIME_MIN, TIME_MAX),
         sensor_range: tuple[int, int] = (SENSOR_INDEX_MIN, SENSOR_INDEX_MAX),
         method: str = 'process',
         times: int = 10,
@@ -134,9 +176,12 @@ def benchmark(
         internal_times.append(time_taken)
     # Store duration of entire execution.
     total_external_duration = perf_counter() - start_time
+    total_internal_duration = sum(internal_times)
 
+    # Gather benchmark timing results and provide a summary
+    # of these.
     bench_results = logger.log_task('\nGathering benchmarking results... ')\
         (Series(internal_times).describe)()
 
-    # Explicitly return nothing for readability.
-    return bench_results, total_external_duration
+    # Return all results.
+    return bench_results, total_internal_duration, total_external_duration

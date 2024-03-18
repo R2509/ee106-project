@@ -1,5 +1,8 @@
+import pandas as pd
+
 from simple_cli import SimpleCLI
 from commands import commands
+from util import COLUMN_WIDTH
 
 def main():
     '''Main function.'''

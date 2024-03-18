@@ -5,10 +5,10 @@ Allows the creation and usage of a basic Command-Line Interface.
 import sys
 
 from argparse import ArgumentParser, Namespace
-import traceback
 from typing import Any, Callable
 
-from util import TEXT_GREY, TEXT_RESET, logger
+from logger import logger
+from util import TEXT_GREY, TEXT_RESET
 
 
 class _Command:
@@ -57,6 +57,11 @@ class _CommandList:
         '''
         Add a command to the CLI.
         '''
+        if self.get_command(cmd_name) is not None:
+            raise ValueError(
+                f'A command with the name "{cmd_name}" has already been'
+                ' registered against this CLI.'
+            )
         command = _Command(cmd_name, cmd_func, cmd_desc, params)
         self.commands.append(command)
     def add_commands(
@@ -70,18 +75,34 @@ class _CommandList:
         ):
         '''
         Add multiple commands to the CLI. Commands are passed as in
-        `SimpleCLI.add_command()`, with each command being a tuple.
+        `add_command()`, with each command being a tuple.
         '''
         for cmd in cmds:
             self.add_command(*cmd)
 
     def get_command(self, name: str):
-        c = list(filter(lambda x: x.name == name, self.commands))
-        if len(c) == 0:
+        '''Retrieve a single command by name.'''
+        filtered_cmd_list = list(filter(lambda x: x.name == name, self.commands))
+        # If no command with the specified name exists,
+        # return nothing.
+        if len(filtered_cmd_list) == 0:
             return None
-        return c[0]
+
+        # There should NEVER be more than one command
+        # registered with the same name internally unless
+        # the user manipulated the command list manually.
+        assert len(filtered_cmd_list) == 1,\
+            'More than one command was found with the same name.'
+
+        # Return the one and only item of the filtered
+        # list -- the command with the name passed.
+        return filtered_cmd_list[0]
 
     def list_commands(self):
+        '''Return a list of names of all the currently registered command.'''
+
+        # Use list comprehension to get names from
+        # registered commands
         return [command.name for command in self.commands]
 
 class SimpleCLI:
@@ -100,10 +121,10 @@ class SimpleCLI:
     def _add_default_commands(self):
         def cmd_exit(ns: Namespace):
             sys.exit(ns.code)
-        def cmd_clear(ns: Namespace):
+        def cmd_clear(_):
             logger.clear_terminal()
 
-        def cmd_help(ns: Namespace):
+        def cmd_help(_):
             cmdlist_str = ' '.join(self.command_list.list_commands())
             return f'Available commands:\n\t{TEXT_GREY}{cmdlist_str}{TEXT_RESET}'
 
@@ -114,7 +135,7 @@ class SimpleCLI:
                 'type': int,
             }),
         ])
-        
+
         self.add_command('clear', cmd_clear, 'Clear the terminal.', [])
         self.add_command('help', cmd_help, 'List available commands.', [])
 
@@ -142,24 +163,11 @@ class SimpleCLI:
             else:
                 acc = item
             if append:
-                out.append(acc.strip('"'))
+                out.append(acc.strip().strip('"'))
                 acc = ''
 
         return out
 
-    def run_command(self, command_text: str):
-        command_name, *command_args = self._split_command_text(command_text)
-
-        if command_name == '':
-            return
-
-        command = self.command_list.get_command(command_name)
-
-        if command is not None:
-            output = command(command_args)
-            logger.log(f'{output}\n')
-        else:
-            logger.log(f'No command named: "{command_name}".\n\r')
     def _run_cli(self):
         while True:
             # Get a line of input.
@@ -173,7 +181,23 @@ class SimpleCLI:
                 if len(command) > 0:
                     self.run_command(command)
 
+    def run_command(self, command_text: str):
+        '''Run a command, if it exists.'''
+        command_name, *command_args = self._split_command_text(command_text)
+
+        if command_name == '':
+            return
+
+        command = self.command_list.get_command(command_name)
+
+        if command is not None:
+            output = command(command_args)
+            logger.log(f'{output}\n')
+        else:
+            logger.log(f'No command named: "{command_name}".\n\r')
+
     def start(self):
+        '''Start up the CLI.'''
         try:
             self._run_cli()
         except KeyboardInterrupt:

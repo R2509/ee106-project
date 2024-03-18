@@ -2,7 +2,8 @@ from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 
-from proc import benchmark, summarise_file, logger
+from logger import logger
+from proc import benchmark, summarise_file
 from util import date_string
 
 
@@ -15,10 +16,12 @@ def generate_summary(ns: Namespace):
         time_range = (ns.time_start, ns.time_end),
         sensor_range = (ns.sensor_start, ns.sensor_end),
     )
-    logger.log(f'{data}\n\r\n\rProcessing took {time_taken:.3f} seconds.')
+    # Clean this up
+    data_str = "\n\n".join([str(df) for df in data])
+    logger.log(f'{data_str}\n\r\n\rProcessing took {time_taken:.3f} seconds.')
 
 def benchmark_summary(ns: Namespace):
-    bench_analysis, time_taken = benchmark(
+    bench_analysis, time_taken_ext, time_taken_int = benchmark(
         this_dir / ns.file_path,
         method = ns.method,
         time_range = (ns.time_start, ns.time_end),
@@ -28,7 +31,8 @@ def benchmark_summary(ns: Namespace):
     logger.log(f'''
 Benchmarking results:
 
-External recorded time (entire test): {time_taken:.3f}
+External recorded time (entire test): {time_taken_ext:.3f}
+Internal recorded time (entire test): {time_taken_int:.3f}
 Internal time analysis:
 {bench_analysis}
 ''')

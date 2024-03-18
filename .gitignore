@@ -1,2 +1,4 @@
 .conda
 .venv
+sensor_timeseries.csv
+__pycache__

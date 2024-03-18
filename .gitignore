@@ -1,4 +1,5 @@
 .conda
 .venv
 sensor_timeseries.csv
+small_dataset.csv
 __pycache__

@@ -164,14 +164,24 @@ def benchmark(
     data_subset = logger.log_task('Creating DataFrame subset for analysis... ')\
         (subset_df)(df, *time_range, *sensor_range)
 
+    # Add another timing counter so that the delays from printing can be minimsed
+    printing_timer = -1
+    threshold = 0.25
     # Run analysis a set number of times, as specified by `times`.
     # Record start time externally, and create list for internal times.
     start_time = perf_counter()
     internal_times: list[float] = []
 
     for index in range(times):
-        logger.log(f'{CLEAR_LINE}Benchmarking analysis program... (run {index + 1} of {times})')
+        if any([
+            printing_timer > threshold,
+            printing_timer == -1,
+            times == index + 1,
+        ]):
+            logger.log(f'{CLEAR_LINE}Benchmarking analysis program... (run {index + 1} of {times})')
+            printing_timer = 0
         _, time_taken = generate_descriptions(data_subset, method)
+        printing_timer += time_taken
         # Record each internal time.
         internal_times.append(time_taken)
     # Store duration of entire execution.

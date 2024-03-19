@@ -155,7 +155,7 @@ def subset_df(
     # picklable. The data can be parsed back into a Series
     # or DataFrame later when needed. Note that the data is
     # split into column vectors and not row vectors.
-    columns = [df[colname].to_numpy() for colname in cells.columns]
+    columns = [cells[colname].to_numpy() for colname in cells.columns]
     return columns
 
 def get_executor_class(method: str) -> type[ThreadPoolExecutor | ProcessPoolExecutor] | None:

@@ -174,6 +174,7 @@ class SimpleCLI:
             line = input('Python: > ')
             # Split by any semicolons (in case the
             # user wants to run multiple commands).
+
             commands = line.split(';')
             # Run each command in turn.
             for command in commands:

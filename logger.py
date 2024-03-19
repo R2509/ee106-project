@@ -1,4 +1,5 @@
 import sys
+from time import perf_counter
 from typing import Any, Callable
 from util import CLEAR_SCREEN
 
@@ -49,9 +50,12 @@ class Logger:
             def inner(*args: Any, **kwargs: Any): # Return type same as task
                 self.log(message)
 
+                #TODO: DIUCMENT
+                start_time = perf_counter()
                 result = task(*args, **kwargs)
+                duration = perf_counter() - start_time
 
-                sys.stdout.write(f'{task_completed_message}\n')
+                sys.stdout.write(f'{task_completed_message} ({duration}).\n')
                 sys.stdout.flush()
 
                 return result

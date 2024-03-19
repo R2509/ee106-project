@@ -2,7 +2,6 @@
 Main processing functionality.
 '''
 
-from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 
@@ -25,26 +24,14 @@ from util import (
 )
 
 
-def subprocess_task(data: list | list[list]):
+def subprocess_task(data: list):
     '''
     Provide a data summary of the `Series` or `DataFrame` data provided.
     contains code suggested by supervisor.
     '''
 
-    # Convert list, or list of lists, into
-    # a Series or DataFrame respectively.
-    if type(data[0]) == list:
-        # If the list data is 2d (i.e. has nested
-        # lists) it must represent a DataFrame.
-        describable = DataFrame(data)
-    else:
-        # The only other possible option is for
-        # the data to represent a Series.
-        describable = Series(data)
-
-    # Get Pandas to provide a summary on the
-    # Series or DataFrame.
-    desc = describable.describe()
+    # Get Pandas to provide a summary on the Series data.
+    desc = Series(data).describe()
 
     return desc
 
@@ -167,6 +154,7 @@ def benchmark(
     # Add another timing counter so that the delays from printing can be minimsed
     printing_timer = -1
     threshold = 0.25
+
     # Run analysis a set number of times, as specified by `times`.
     # Record start time externally, and create list for internal times.
     start_time = perf_counter()

@@ -1,4 +1,4 @@
-
+import logger
 
 # removes error lined from the dataframe
 
@@ -26,7 +26,7 @@ def clean_dataframe(data_frame_in: pandas.DataFrame):
             # Append rows with errors to list of eror rows
             
     data_frame_out = data_frame_in.drop(err_rows)
-    print("there was", str(len(err_rows)), "rows containing errors\n    all removed successfully")
+    logger.log(f"there was {str(len(err_rows))} rows containing errors\n    all removed successfully")
    # print(data_frame_out)
 
     #print(err_rows)

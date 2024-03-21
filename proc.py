@@ -7,7 +7,7 @@ from time import perf_counter
 
 from pandas import DataFrame, Series, read_csv
 
-from logger import logger
+import logger
 from util import (
     CLEAR_LINE,
 

@@ -5,13 +5,18 @@ Allows the creation and usage of a basic Command-Line Interface.
 import sys
 
 from argparse import ArgumentParser, Namespace
+import traceback
 from typing import Any, Callable
 
-from logger import logger
+import logger
 from util import TEXT_GREY, TEXT_RESET
 
 
 class _Command:
+    '''
+    A class to store a single command which has a name, description, function
+    and a set of zero or more arguments.
+    '''
     def __init__(
             self,
             name: str,
@@ -35,7 +40,18 @@ class _Command:
 
     def __call__(self, params: list[str]):
         args = self.arg_parser.parse_args(params)
-        result = self.func(args)
+        result = None
+        try:
+            try:
+                result = self.func(args)
+            except KeyboardInterrupt:
+            # ^C while command is running should return
+            # from command, not entire CLI.
+                logger.info('^C detected, exiting command gracefully...')
+        except:
+        # Catch any other type of error, print it, and
+        # Return from the command.
+            logger.error('\n' + traceback.format_exc())
 
         if result is None:
             return ''
@@ -44,6 +60,11 @@ class _Command:
 
 
 class _CommandList:
+    '''
+    A collection of `_Command` objects. This can have commands added to it, and supports
+    command lookup and listing. Useful to have instead of a `list` inside
+    `SimpleCLI`.
+    '''
     def __init__(self) -> None:
         self.commands: list[_Command] = []
 
@@ -107,8 +128,7 @@ class _CommandList:
 
 class SimpleCLI:
     '''
-    Provides a simple CLI interface to which
-    commands can be added.
+    Provides a simple CLI interface to which commands can be added.
     '''
     def __init__(self, include_default_commands: bool = True):
         self.command_list = _CommandList()
@@ -202,5 +222,5 @@ class SimpleCLI:
         try:
             self._run_cli()
         except KeyboardInterrupt:
-            print('^C detected, exiting gracefully...')
+            logger.info('^C detected, exiting CLI gracefully...')
             sys.exit(0)

@@ -23,6 +23,8 @@ CLEAR_LINE = '\x1b[2K\x1b[G'
 CLEAR_SCREEN = '\x1b[2J\x1b[H'
 TEXT_RESET = '\x1b[m'
 TEXT_GREY = '\x1b[38;5;245m'
+TEXT_CYAN = '\x1b[36m'
+TEXT_RED = '\x1b[31m'
 
 # Column width used in formatting results.
 # MINIMUM VALUE: 15

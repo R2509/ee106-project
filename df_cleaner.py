@@ -31,10 +31,3 @@ def clean_dataframe(data_frame_in: pandas.DataFrame):
 
     #print(err_rows)
     return data_frame_out
-
-
-_ = (clean_dataframe(dfrm))
-
-
-
-#\x1b[2J\x1b[A

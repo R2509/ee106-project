@@ -1,6 +1,9 @@
+'''
+Command definitions.
+'''
+
 from argparse import Namespace
-from datetime import datetime
-from pathlib import Path# heheheheh
+from pathlib import Path
 
 import logger
 from proc import benchmark, summarise_file

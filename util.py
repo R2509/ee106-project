@@ -31,14 +31,14 @@ COLUMN_WIDTH = 16
 
 def sensor_name(index: int):
     '''
-    Generates a sensor name from an index.
+    Generates a sensor name from the index provided.
     '''
     # Use an f-string to generate the name of the sensor.
     return f"sensor_{index:02d}"
 
 def date_string(date_str: str):
     '''
-    Validation function for use with `argparse`.
+    Validation function for use with `argparse`. Works like a type checker.
 
     Checks if the passed date string is valid, then returns that same date
     string. Invalid strings will raise a `ValueError`.
@@ -53,7 +53,7 @@ def date_string(date_str: str):
 def date_string_lt(date_string_1: str, date_string_2: str):
     '''
     Evaluates whether the first date string represents an earlier point in time
-    than the second.
+    than the second. i.e. returns whether date_string_1 < date_string_2.
     '''
 
     # Convert date strings to `datetime` objects and
@@ -64,7 +64,7 @@ def date_string_lt(date_string_1: str, date_string_2: str):
 def date_string_gt(date_string_1: str, date_string_2: str):
     '''
     Evaluates whether the first date string represents a later point in time
-    than the second.
+    than the second. i.e. returns whether date_string_1 > date_string_2.
     '''
 
     # Convert date strings to `datetime` objects and
@@ -79,7 +79,7 @@ def validate_analysis_inputs(
         sensor_end: int,
     ):
     '''
-    Perform validation on the inputs passed to the amalysis functions.
+    Perform validation on the inputs passed to the analysis functions.
 
     Only value validation is performed since type validation is handled by
     `argparse` beforehand.
@@ -157,6 +157,36 @@ def subset_df(
     # split into column vectors and not row vectors.
     columns = [cells[colname].to_numpy() for colname in cells.columns]
     return columns
+
+def clean_df(df_in: DataFrame):
+    '''
+    Removes invalid rows from the dataframe passed in. Checks whether the
+    machine status at each row is "NORMAL" or not.
+
+    Returns the cleaned resultant `DataFrame`.
+    '''
+
+    broken_rows = []
+    recovering_rows = []
+    for row_index in range(0, len(df_in)):
+        machine_status = df_in.at[row_index, 'machine_status']
+
+        if machine_status == "BROKEN":
+            # if the dataframe has an error or recovering
+            # state at this particilar row do below items.
+            broken_rows.append(row_index)
+            # Append rows with errors to list of eror rows
+
+        if machine_status == "RECOVERING":
+            # if the dataframe has an error or recovering state at this particilar row do below items
+            recovering_rows.append(row_index)
+            # Append rows with errors to list of eror rows
+
+    df_out = df_in.drop(broken_rows + recovering_rows)
+    num_broken = len(broken_rows)
+    num_recovering = len(recovering_rows)
+    
+    return df_out, (num_broken, num_recovering)
 
 def get_executor_class(method: str) -> type[ThreadPoolExecutor | ProcessPoolExecutor] | None:
     '''

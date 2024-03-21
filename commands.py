@@ -15,6 +15,7 @@ def generate_summary(ns: Namespace):
         method = ns.method,
         time_range = (ns.time_start, ns.time_end),
         sensor_range = (ns.sensor_start, ns.sensor_end),
+        no_clean = ns.no_clean,
     )
     # Clean this up
     data_str = "\n\n".join([str(df) for df in data])
@@ -27,6 +28,7 @@ def benchmark_summary(ns: Namespace):
         time_range = (ns.time_start, ns.time_end),
         sensor_range = (ns.sensor_start, ns.sensor_end),
         times = ns.ntimes,
+        no_clean = ns.no_clean,
     )
     logger.log(f'''
 Benchmarking results:
@@ -98,6 +100,18 @@ REG_generate_summary = (
                                 ' tasks. Can be either "process" or'
                                 ' "thread". Defaults to "process".',
                 'default': 'process',
+                'choices': [
+                    'process',
+                    'thread',
+                    'sync',
+                ]
+            },
+        ),
+        (
+            ['-nc', '--no-clean'],
+            {
+                'action': 'store_true',
+                'help': 'Do not clean the dataframe of the inalid rows.',
             },
         ),
     ],

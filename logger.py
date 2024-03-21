@@ -1,7 +1,6 @@
-import sys
 from time import perf_counter
 from typing import Any, Callable
-from util import CLEAR_SCREEN, TEXT_GREY, TEXT_YELLOW, TEXT_RED, TEXT_RESET
+from util import CLEAR_SCREEN, TEXT_YELLOW, TEXT_RED, TEXT_RESET
 
 
 '''
@@ -11,10 +10,7 @@ cleaner.
 '''
 
 def _log(message: str, flush: bool):
-    sys.stdout.write(message)
-    if flush:
-        # Ensure that the output gets printed immediately.
-        sys.stdout.flush()
+    print(message, flush=flush, end='')
 
 def log(message: str, flush: bool = True) -> None:
     '''
@@ -22,17 +18,11 @@ def log(message: str, flush: bool = True) -> None:
     '''
     _log(message, flush)
 
-def warn(message: str, flush: bool = True):
+def warn(message: str, flush: bool = True):#
     '''
     Similar to `log()`, but prints a warning message (in yeloow text).
     '''
     _log(f'{TEXT_YELLOW}{message}{TEXT_RESET}', flush)
-
-def info(message: str, flush: bool = True):
-    '''
-    Similar to `log()`, but prints an informational message (in grey text).
-    '''
-    _log(f'{TEXT_GREY}{message}{TEXT_RESET}', flush)
 
 def error(message: str, flush: bool = True):
     '''
@@ -73,8 +63,7 @@ def log_task(
             result = task(*args, **kwargs)
             duration = perf_counter() - start_time
 
-            sys.stdout.write(f'{task_completed_message} ({duration}).\n')
-            sys.stdout.flush()
+            _log(f'{task_completed_message} ({duration}).\n', True)
 
             return result
         return inner

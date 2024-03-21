@@ -2,7 +2,7 @@ from argparse import Namespace
 from datetime import datetime
 from pathlib import Path# heheheheh
 
-from logger import logger
+import logger
 from proc import benchmark, summarise_file
 from util import date_string
 

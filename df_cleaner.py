@@ -7,7 +7,6 @@
 
 
 import pandas
-import multiprocessing as mp
 # Import relevant 
 
 dfrm = pandas.read_csv("sensor_timeseries.csv")
@@ -17,7 +16,7 @@ err_rows = []
 
 
 def clean_dataframe(data_frame_in: pandas.DataFrame):
-    err_prev = False
+ 
     for row_index in range(0, len(data_frame_in)):
         # if col last != normal then remove it
 
@@ -32,11 +31,10 @@ def clean_dataframe(data_frame_in: pandas.DataFrame):
 
     #print(err_rows)
     return data_frame_out
-    
-    
-    
 
 
-_ =(clean_dataframe(dfrm))
+_ = (clean_dataframe(dfrm))
+
+
 
 #\x1b[2J\x1b[A

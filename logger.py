@@ -1,7 +1,7 @@
 import sys
 from time import perf_counter
 from typing import Any, Callable
-from util import CLEAR_SCREEN, TEXT_CYAN, TEXT_RED, TEXT_RESET
+from util import CLEAR_SCREEN, TEXT_GREY, TEXT_YELLOW, TEXT_RED, TEXT_RESET
 
 
 '''
@@ -22,11 +22,17 @@ def log(message: str, flush: bool = True) -> None:
     '''
     _log(message, flush)
 
+def warn(message: str, flush: bool = True):
+    '''
+    Similar to `log()`, but prints a warning message (in yeloow text).
+    '''
+    _log(f'{TEXT_YELLOW}{message}{TEXT_RESET}', flush)
+
 def info(message: str, flush: bool = True):
     '''
-    Similar to `log()`, but prints an informational message (in blue text).
+    Similar to `log()`, but prints an informational message (in grey text).
     '''
-    _log(f'{TEXT_CYAN}{message}{TEXT_RESET}', flush)
+    _log(f'{TEXT_GREY}{message}{TEXT_RESET}', flush)
 
 def error(message: str, flush: bool = True):
     '''
@@ -37,6 +43,7 @@ def error(message: str, flush: bool = True):
 def log_task(
         message: str,
         task_completed_message: str = 'Complete',
+        flush = True,
     ):
     '''
     Wraps a function so that a message is printed before the function is
@@ -59,7 +66,7 @@ def log_task(
     '''
     def wrapper(task: Callable):
         def inner(*args: Any, **kwargs: Any): # Return type same as task
-            self.log(message)
+            _log(message, flush)
 
             #TODO: DIUCMENT
             start_time = perf_counter()
@@ -73,9 +80,9 @@ def log_task(
         return inner
     return wrapper
 
-def clear_terminal():
+def clear_terminal(flush = True):
     '''
     Clear all text on the terminal window and reset the cursor position to
     the top left of the terminal window.
     '''
-    _log(CLEAR_SCREEN)
+    _log(CLEAR_SCREEN, flush)

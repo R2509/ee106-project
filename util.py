@@ -4,10 +4,8 @@ Contains general utilities used throughout the program.
 
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
-from shutil import get_terminal_size
-import sys
-from typing import Any, Callable
 from pandas import DataFrame
+from shutil import get_terminal_size
 
 
 # Minimum and maximum values for measurement time.
@@ -23,7 +21,7 @@ CLEAR_LINE = '\x1b[2K\x1b[G'
 CLEAR_SCREEN = '\x1b[2J\x1b[H'
 TEXT_RESET = '\x1b[m'
 TEXT_GREY = '\x1b[38;5;245m'
-TEXT_CYAN = '\x1b[36m'
+TEXT_YELLOW = '\x1b[33m'
 TEXT_RED = '\x1b[31m'
 
 # Column width used in formatting results.

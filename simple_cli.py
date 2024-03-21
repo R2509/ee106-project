@@ -3,9 +3,9 @@ Allows the creation and usage of a basic Command-Line Interface.
 '''
 
 import sys
+import traceback
 
 from argparse import ArgumentParser, Namespace
-import traceback
 from typing import Any, Callable
 
 import logger
@@ -30,6 +30,9 @@ class _Command:
         self._setup_parser(*arg_names)
 
     def _setup_parser(self, *arg_names: tuple[list[str], dict[str, Any]]):
+        '''
+        Set up the `argparse.ArgumentParser` instance for this command.
+        '''
         arg_parser = ArgumentParser(
             prog = self.name,
             description = self.desc,
@@ -39,20 +42,28 @@ class _Command:
         self.arg_parser = arg_parser
 
     def __call__(self, params: list[str]):
+        '''
+        Runs when a `_Command` instance is called.
+        '''
         args = self.arg_parser.parse_args(params)
         result = None
         try:
-            try:
-                result = self.func(args)
-            except KeyboardInterrupt:
-            # ^C while command is running should return
-            # from command, not entire CLI.
-                logger.info('^C detected, exiting command gracefully...')
+            result = self.func(args)
+        except KeyboardInterrupt:
+        # ^C while command is running should return
+        # from command, not entire CLI.
+            logger.warn('^C detected, exiting command gracefully...')
+        except SystemExit as exc:
+            # If Python's `exit()` function is used,
+            # propagate the exception so that it is not
+            # caught by the next `except` clause.
+            raise exc
         except:
         # Catch any other type of error, print it, and
         # Return from the command.
             logger.error('\n' + traceback.format_exc())
 
+        # Ensure that a string is always returned
         if result is None:
             return ''
         return str(result)
@@ -120,7 +131,9 @@ class _CommandList:
         return filtered_cmd_list[0]
 
     def list_commands(self):
-        '''Return a list of names of all the currently registered command.'''
+        '''
+        Return a list of names of all the currently registered commands.
+        '''
 
         # Use list comprehension to get names from
         # registered commands
@@ -139,15 +152,30 @@ class SimpleCLI:
             self._add_default_commands()
 
     def _add_default_commands(self):
+        '''
+        Add a set of default commands to the CLI interface.
+        '''
+
         def cmd_exit(ns: Namespace):
+            '''
+            `exit` command.
+            '''
             sys.exit(ns.code)
+
         def cmd_clear(_):
+            '''
+            `clear` command.
+            '''
             logger.clear_terminal()
 
         def cmd_help(_):
+            '''
+            `help` command.
+            '''
             cmdlist_str = ' '.join(self.command_list.list_commands())
             return f'Available commands:\n\t{TEXT_GREY}{cmdlist_str}{TEXT_RESET}'
 
+        # Add the commands defined above
         self.add_command('exit', cmd_exit, 'Exit the CLI.', [
             (['-c', '--code'], {
                 'action': 'store',
@@ -222,5 +250,5 @@ class SimpleCLI:
         try:
             self._run_cli()
         except KeyboardInterrupt:
-            logger.info('^C detected, exiting CLI gracefully...')
+            logger.warn('^C detected, exiting CLI gracefully...')
             sys.exit(0)
